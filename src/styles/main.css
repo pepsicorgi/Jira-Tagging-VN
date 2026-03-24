@@ -191,9 +191,10 @@
 
 .vn-cr-tabs-header {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid #dfe1e6;
-    margin-bottom: 8px;
-    gap: 5px;
+    padding-right: 5px;
 }
 
 .vn-cr-tab-link {
@@ -366,4 +367,59 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.vn-cr-search-container {
+    padding: 8px 10px;
+    background: #f4f5f7;
+    border-bottom: 1px solid #dfe1e6;
+}
+
+#vn-cr-search-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#vn-cr-search-input:focus {
+    border-color: #0052cc;
+    background: #fff;
+}
+
+.vn-cr-tabs-list {
+    display: flex;
+    overflow-x: auto;
+}
+
+.vn-cr-tabs-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.vn-cr-tab-search-toggle, .vn-cr-tab-add {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 8px;
+    font-size: 14px;
+    border-radius: 3px;
+    color: #42526e;
+}
+
+.vn-cr-tab-search-toggle:hover, .vn-cr-tab-add:hover {
+    background: #ebecf0;
+}
+
+.vn-cr-tab-search-toggle.active {
+    background: #deebff;
+    color: #0052cc;
+}
+
+/* Hide horizontal scrollbar for tabs list */
+.vn-cr-tabs-list::-webkit-scrollbar {
+    display: none;
 }

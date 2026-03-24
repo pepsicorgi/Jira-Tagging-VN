@@ -3,6 +3,7 @@ import { getVNCrData, saveVNCrData } from '../utils/storage.js';
 
 // 1. State tracker for the active tab
 let vnCrActiveTab = '3rd Party Tag';
+let isSearchOpen = false; // Track if search bar is visible
 
 export function initCommentFeature() {
     const tabListSelector = '#comment-wiki-edit .aui-navgroup-primary ul.aui-nav';
@@ -72,36 +73,62 @@ async function renderMenuContent(container) {
     const data = await getVNCrData();
     const categories = Object.keys(data);
 
+    // Get current search value before re-render
+    const existingSearch = container.querySelector('#vn-cr-search-input');
+    const searchTerm = existingSearch ? existingSearch.value.toLowerCase() : '';
+
     if (!categories.includes(vnCrActiveTab)) vnCrActiveTab = categories[0];
+
+    // Filter items
+    const filteredItems = data[vnCrActiveTab].filter(item => {
+        const nameMatch = item.name.toLowerCase().includes(searchTerm);
+        const categoryMatch = item.category?.toLowerCase().includes(searchTerm);
+        return nameMatch || categoryMatch;
+    });
 
     container.innerHTML = `
         <div class="vn-cr-tabs-header">
-            ${categories.map(cat => `
-                <button class="vn-cr-tab-link ${cat === vnCrActiveTab ? 'active' : ''}" data-name="${cat}">
-                    ${cat}
-                </button>
-            `).join('')}
-            <button class="vn-cr-tab-add" title="Add New Category">+</button>
+            <div class="vn-cr-tabs-list">
+                ${categories.map(cat => `
+                    <button class="vn-cr-tab-link ${cat === vnCrActiveTab ? 'active' : ''}" data-name="${cat}">
+                        ${cat}
+                    </button>
+                `).join('')}
+            </div>
+            <div class="vn-cr-tabs-actions">
+                <button class="vn-cr-tab-search-toggle ${isSearchOpen ? 'active' : ''}" title="Search">🔍</button>
+                <button class="vn-cr-tab-add" title="Add New Category">+</button>
+            </div>
         </div>
         
-        <div class="vn-cr-items-list">
-    ${data[vnCrActiveTab].map((tmpl) => `
-        <div class="vn-cr-item-row" data-id="${tmpl.id}">
-            <div class="vn-cr-item-name">
-                ${tmpl.category ? `<span class="vn-cr-badge">${tmpl.category}</span> ` : ''}
-                ${tmpl.name}
-            </div>
-            <button class="vn-cr-item-del" data-id="${tmpl.id}">×</button>
+        <div class="vn-cr-search-container" style="display: ${isSearchOpen ? 'flex' : 'none'}">
+            <input type="text" id="vn-cr-search-input" placeholder="Search templates..." value="${searchTerm.replace(/"/g, '&quot;')}">
         </div>
-    `).join('')}
-</div>
 
+        <div class="vn-cr-items-list">
+            ${filteredItems.map((tmpl) => `
+                <div class="vn-cr-item-row" data-id="${tmpl.id}">
+                    <div class="vn-cr-item-name">
+                        ${tmpl.category ? `<span class="vn-cr-badge">${tmpl.category}</span> ` : ''}
+                        ${tmpl.name}
+                    </div>
+                    <button class="vn-cr-item-del" data-id="${tmpl.id}">×</button>
+                </div>
+            `).join('')}
+        </div>
         <div class="vn-cr-add-btn-wrapper">
             <button class="vn-cr-add-new-tmpl">+ Add New Template</button>
         </div>
     `;
 
     setupMenuEvents(container, data);
+
+    // Auto-focus if search just opened
+    if (isSearchOpen) {
+        const input = container.querySelector('#vn-cr-search-input');
+        input.focus();
+        if (searchTerm) input.setSelectionRange(searchTerm.length, searchTerm.length);
+    }
 }
 
 // 3. New function to handle interactions inside the dropdown
@@ -123,6 +150,22 @@ function setupMenuEvents(container, data) {
         };
     }
     // --- END SCROLL FIX ---
+
+    const searchToggle = container.querySelector('.vn-cr-tab-search-toggle');
+if (searchToggle) {
+    searchToggle.onclick = (e) => {
+        e.stopPropagation();
+        isSearchOpen = !isSearchOpen; // Flip the state
+        renderMenuContent(container); // Re-render
+    };
+}
+
+const searchInput = container.querySelector('#vn-cr-search-input');
+if (searchInput) {
+    searchInput.oninput = () => renderMenuContent(container);
+    searchInput.onclick = (e) => e.stopPropagation();
+}
+
     // A. Tab Switching (Remains the same)
     container.querySelectorAll('.vn-cr-tab-link').forEach(btn => {
         btn.onclick = (e) => {
