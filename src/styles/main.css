@@ -221,10 +221,30 @@
 
 /* 1. The main list container with scrolling */
 .vn-cr-items-list {
-    flex: 1; 
-    overflow-y: auto; /* This is where the scrolling happens */
-    padding-right: 4px;
-    min-height: 50px; /* Prevents collapse if empty */
+   /* Adjust this height to show exactly 5 items (approx 5 * 40px) */
+    max-height: 220px; 
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 5px 0;
+    display: block;
+}
+
+/* Custom Scrollbar for a cleaner look */
+.vn-cr-items-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.vn-cr-items-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.vn-cr-items-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.vn-cr-items-list::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
 }
 
 /* 2. Individual Row Styling + Hover */
@@ -307,4 +327,43 @@
     text-transform: uppercase;
     display: inline-block;
     vertical-align: middle;
+}
+
+/* Container for the choices */
+.vn-cr-picker-container {
+    padding: 10px;
+    animation: fadeIn 0.2s ease;
+}
+
+.vn-cr-picker-label {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #5e6c84;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+/* The choice buttons */
+.vn-cr-picker-option {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: #f4f5f7;
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.vn-cr-picker-option:hover {
+    background: #ebf2ff;
+    border-color: #0052cc;
+    color: #0052cc;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
