@@ -28,26 +28,24 @@ export function initAemShopFeature() {
             'Date Extension Rule Checklist': [
                 { checkpoint: 'Detail', item: 'Summary(Title)' },
                 { checkpoint: '', item: 'Issue Type: 3rd Party Tag Request' },
+                { checkpoint: '', item: 'Sub Issue Type: Date Extension Rule' },
                 { checkpoint: '', item: 'Subsidiary(GTA)' },
                 { checkpoint: '', item: 'Section(GTA)' },
                 {
                     checkpoint: 'Description',
                     item: '<span style="color:#d32f2f; font-weight:bold;">Target Property</span>',
                 },
+                { checkpoint: '', item: '<span style="color:#d32f2f; font-weight:bold;">Target Library</span>' },
                 { checkpoint: '', item: 'Target Page' },
                 {
                     checkpoint: '',
-                    item: '<span style="color:#d32f2f; font-weight:bold;">Current Expiration Date</span>',
+                    item: '<span style="color:#d32f2f; font-weight:bold;">Current Expiration date</span>',
                 },
                 {
                     checkpoint: '',
-                    item: '<span style="color:#d32f2f; font-weight:bold;">Requested Expiration Date</span>',
+                    item: '<span style="color:#d32f2f; font-weight:bold;">Requested Expiration date</span>',
                 },
                 { checkpoint: '', item: 'Purpose & Goal' },
-                {
-                    checkpoint: 'Attachment',
-                    item: '<span style="color:#d32f2f; font-weight:bold;">Launch Publish Document Excel file</span>',
-                },
                 { checkpoint: 'Library/Rule', item: 'Event - Window Loaded / Click' },
                 { checkpoint: '', item: 'Query Path / Value Comparison' },
                 { checkpoint: '', item: 'Condition - Date Range' },
@@ -61,28 +59,24 @@ export function initAemShopFeature() {
             'New/Update Rule Checklist': [
                 { checkpoint: 'Detail', item: 'Summary(Title)' },
                 { checkpoint: '', item: 'Issue Type: 3rd Party Tag Request' },
+                { checkpoint: '', item: 'Sub Issue Type: New/Update Rule' },
                 { checkpoint: 'Description', item: 'Subsidiary(GTA)' },
                 { checkpoint: '', item: 'Section(GTA)' },
                 {
                     checkpoint: '',
                     item: '<span style="color:#d32f2f; font-weight:bold;">Target Property</span>',
                 },
+                { checkpoint: '', item: '<span style="color:#d32f2f; font-weight:bold;">Target Library</span>' },
                 { checkpoint: '', item: 'Target Page' },
-                { checkpoint: '', item: 'Status(TO-BE)' },
+                { checkpoint: '', item: 'Expiration date (to-be)', },
+                { checkpoint: '', item: 'Status (to-be)' },
                 { checkpoint: '', item: 'Purpose & Goal' },
-                { checkpoint: '', item: 'DataTrue Tag Audit Report result' },
-                { checkpoint: '', item: '① Result URL' },
-                { checkpoint: '', item: '② Result Screenshot' },
                 {
                     checkpoint: 'Attachment',
-                    item: '<span style="color:#d32f2f; font-weight:bold;">Launch Publish Document Excel file</span>',
-                },
-                {
-                    checkpoint: '',
-                    item: 'Test Result screenshot image file (without filter)',
+                    item: 'Test Result screenshot image file (without filter)</span>',
                 },
                 { checkpoint: '', item: 'Local Rule Monitoring Excel file' },
-                { checkpoint: '', item: 'Event - NOT Dom Ready' },
+                { checkpoint: 'Library/Rules', item: 'Event - NOT Dom Ready' },
                 { checkpoint: '', item: 'Query Path / Value Comparison' },
                 { checkpoint: '', item: 'Condition - Date Range' },
                 { checkpoint: '', item: 'Script - JavaScript' },
@@ -90,29 +84,27 @@ export function initAemShopFeature() {
                 { checkpoint: '', item: '② Script var s' },
                 { checkpoint: '', item: '③ Rule name 5 depth' },
                 { checkpoint: '', item: '④ Condition GDPR with EU' },
-                { checkpoint: '', item: 'Integration Result' },
+                { checkpoint: 'Comment', item: 'Integration Result' },
                 {
-                    checkpoint: 'Comment',
+                    checkpoint: '',
                     item: '<span style="color:#d32f2f; font-weight:bold;">Sub’s Head of Online Biz Confirmation Name</span>',
                 },
                 {
                     checkpoint: 'Issue Links',
-                    item: 'Ticket Link of New Tag Approval Ticket ID',
+                    item: 'Ticket Link of New Tag Approval',
                 },
             ],
             'Disable Rule Checklist': [
                 { checkpoint: 'Detail', item: 'Summary(Title)' },
                 { checkpoint: '', item: 'Issue Type: 3rd Party Tag Request' },
+                { checkpoint: '', item: 'Sub Issue Type: Disable Rule' },
                 { checkpoint: 'Description', item: 'Subsidiary(GTA)' },
                 { checkpoint: '', item: 'Section(GTA)' },
                 {
                     checkpoint: '',
                     item: '<span style="color:#d32f2f; font-weight:bold;">Target Property</span>',
                 },
-                {
-                    checkpoint: 'Attachment',
-                    item: '<span style="color:#d32f2f; font-weight:bold;">Launch Publish Document Excel file</span>',
-                },
+                { checkpoint: '', item: '<span style="color:#d32f2f; font-weight:bold;">Target Library</span>' },
             ],
             'New Tag Checklist': [
                 { checkpoint: 'Detail', item: 'Summary(Title)' },
@@ -126,9 +118,6 @@ export function initAemShopFeature() {
                 { checkpoint: '', item: 'Target Page' },
                 { checkpoint: '', item: 'Status(AS-IS)' },
                 { checkpoint: '', item: 'Purpose & Goal' },
-                { checkpoint: '', item: 'DataTrue Tag Audit Report result' },
-                { checkpoint: '', item: '① Result URL' },
-                { checkpoint: '', item: '② Result Screenshot' },
                 {
                     checkpoint: 'Attachment',
                     item: 'Local Rule Monitoring Excel file',
@@ -143,18 +132,12 @@ export function initAemShopFeature() {
                 { checkpoint: '', item: 'Issue Type: 3rd Party Tag Request' },
                 { checkpoint: '', item: 'Subsidiary(GTA)' },
                 { checkpoint: '', item: 'Section(GTA)' },
-
                 {
                     checkpoint: 'Description',
                     item: '<span style="color:#d32f2f; font-weight:bold;">Target Property</span>',
                 },
+                { checkpoint: '', item: '<span style="color:#d32f2f; font-weight:bold;">Target Library</span>' },
                 { checkpoint: '', item: 'Purpose & Goal' },
-
-                {
-                    checkpoint: 'Library/Rules',
-                    item: 'AL revision compare: Only change GDPR',
-                },
-
                 {
                     checkpoint: 'Comment',
                     item: '<span style="color:#d32f2f; font-weight:bold;">Sub’s Head of Online Biz Confirmation</span>',
