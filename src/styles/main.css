@@ -289,9 +289,9 @@
 }
 
 /* 5. Sticky Footer for "Add New Template" */
-.vn-cr-add-btn-wrapper {
+/* .vn-cr-add-btn-wrapper {
     position: sticky;
-    bottom: -8px; /* Sticks to the bottom of the padded container */
+    bottom: -8px; 
     background: white;
     padding: 10px 0;
     border-top: 1px solid #dfe1e6;
@@ -316,7 +316,7 @@
     background: #e3e5e9;
     color: #0052cc;
     border-color: #0052cc;
-}
+} */
 .vn-cr-badge {
     background-color: #ebecf0;
     color: #42526e;
@@ -423,3 +423,95 @@
 .vn-cr-tabs-list::-webkit-scrollbar {
     display: none;
 }
+
+#vn-cr-btn-wrapper .aui-button:hover {
+    z-index: 2; /* Ensures border highlight overlaps correctly */
+}
+
+#vn-cr-save-btn {
+    background-color: #f4f5f7; /* Slightly different color so it looks like an action */
+    font-weight: bold;
+}
+
+#vn-cr-save-btn:hover {
+    background-color: #ebf2ff;
+    color: #0052cc;
+}
+
+
+#vn-cr-save-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(9, 30, 66, 0.5); /* Jira-style overlay color */
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+.vn-cr-modal-content {
+    background: white;
+    width: 400px;
+    padding: 24px;
+    border-radius: 3px;
+    box-shadow: 0 8px 16px -4px rgba(9, 30, 66, 0.25), 0 0 0 1px rgba(9, 30, 66, 0.08);
+}
+
+.vn-cr-modal-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+}
+
+.vn-cr-modal-header h3 { margin: 0; color: #172b4d; font-size: 20px; }
+
+.vn-cr-modal-close { cursor: pointer; font-size: 24px; color: #6b778c; }
+
+.vn-cr-modal-form label { display: block; margin-top: 15px; font-weight: 600; font-size: 12px; color: #6b778c; }
+
+.vn-cr-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Spacing between rows */
+    width: 100%;
+}
+
+.vn-form-group {
+    width: 100%;
+    display: block;
+}
+
+.vn-cr-modal-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 12px;
+    color: #6b778c;
+}
+
+/* The "Equalizer" CSS */
+.vn-cr-modal-form input, 
+.vn-cr-modal-form select {
+    display: block;
+    width: 100% !important; /* Force it to fill the group */
+    box-sizing: border-box !important; /* Crucial: includes padding in width */
+    height: 36px;
+    padding: 8px 12px;
+    border: 2px solid #dfe1e6;
+    border-radius: 3px;
+    background: #fafbfc;
+    font-size: 14px;
+    outline: none;
+    margin: 0; /* Remove any browser default margins */
+}
+
+.vn-cr-modal-form input:focus, 
+.vn-cr-modal-form select:focus {
+    border-color: #4c9aff;
+    background: white;
+}
+
+.vn-cr-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+
+.vn-cr-btn-primary { background: #0052cc; color: white; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+.vn-cr-btn-primary:hover { background: #0065ff; }
+
+.vn-cr-btn-secondary { background: none; color: #42526e; border: none; padding: 8px 16px; cursor: pointer; }
+.vn-cr-btn-secondary:hover { text-decoration: underline; }

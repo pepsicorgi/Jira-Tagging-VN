@@ -11,25 +11,38 @@ export function initCommentFeature() {
     waitForElement(tabListSelector, (tabGroup) => {
         if (document.querySelector('#vn-cr-li')) return;
 
-        // 1. Create Button
+        // 1. Create the LI container
         const li = document.createElement('li');
         li.id = 'vn-cr-li';
-        const btn = document.createElement('button');
-        btn.id = 'vn-cr-btn';
-        btn.type = 'button';
-        btn.className = 'aui-button';
-        btn.textContent = 'Templates';
-        li.appendChild(btn);
+        li.style.display = 'inline-flex';
+        li.style.alignItems = 'center';
+        li.style.marginLeft = '5px';
+
+        // 2. Create the Button Group (Templates + Save)
+        li.innerHTML = `
+            <button id="vn-cr-btn" type="button" class="aui-button" 
+                style="border-top-right-radius:0; border-bottom-right-radius:0; margin-right:0;">
+                Templates
+            </button>
+            <button id="vn-cr-save-btn" type="button" class="aui-button" title="Save current as template" 
+                style="border-top-left-radius:0; border-bottom-left-radius:0; border-left:1px solid #dfe1e6; padding: 0 8px; margin-left:0; font-weight:bold;">
+                +
+            </button>
+        `;
+
         tabGroup.appendChild(li);
 
-        // 2. Create Dropdown Container (Hidden by default)
+        const btn = li.querySelector('#vn-cr-btn');
+        const saveBtn = li.querySelector('#vn-cr-save-btn');
+
+        // 3. Create Dropdown Container (Hidden by default)
         const menu = document.createElement('div');
         menu.id = 'vn-cr-menu';
         menu.className = 'vn-cr-dropdown';
         menu.style.display = 'none';
-        document.body.appendChild(menu); // Append to body to avoid overflow issues
+        document.body.appendChild(menu);
 
-        // 3. Force the dropdown to always open upwards
+        // --- ACTION: OPEN DROPDOWN (Existing Logic) ---
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const isVisible = menu.style.display === 'flex';
@@ -37,31 +50,35 @@ export function initCommentFeature() {
             if (isVisible) {
                 menu.style.display = 'none';
             } else {
-                // A. Render the content FIRST (so the menu has its items)
                 await renderMenuContent(menu);
-
-                // B. Show it as 'flex' but invisible for a split second to calculate height
                 menu.style.visibility = 'hidden';
                 menu.style.display = 'flex';
 
-                // C. Calculate the position now that the browser knows the height
                 const rect = btn.getBoundingClientRect();
                 const menuHeight = menu.offsetHeight;
 
+                // Position it above the button
                 menu.style.left = `${rect.left + window.scrollX}px`;
                 menu.style.top = `${rect.top + window.scrollY - menuHeight - 8}px`;
-
-                // D. Finally, make it visible
                 menu.style.visibility = 'visible';
             }
         });
 
+        // --- ACTION: SAVE CURRENT (New Logic) ---
+        saveBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            // Close menu if open
+            menu.style.display = 'none';
+
+            // Dynamic import for the capture feature
+            const src = chrome.runtime.getURL('src/content/templateCapture.js');
+            const { initCaptureFlow } = await import(src);
+            initCaptureFlow();
+        });
+
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
-            const isClickInsideMenu = menu.contains(e.target);
-            const isClickOnTriggerBtn = btn.contains(e.target);
-
-            if (!isClickInsideMenu && !isClickOnTriggerBtn) {
+            if (!menu.contains(e.target) && !btn.contains(e.target)) {
                 menu.style.display = 'none';
             }
         });
@@ -116,9 +133,7 @@ async function renderMenuContent(container) {
                 </div>
             `).join('')}
         </div>
-        <div class="vn-cr-add-btn-wrapper">
-            <button class="vn-cr-add-new-tmpl">+ Add New Template</button>
-        </div>
+
     `;
 
     setupMenuEvents(container, data);
@@ -152,19 +167,19 @@ function setupMenuEvents(container, data) {
     // --- END SCROLL FIX ---
 
     const searchToggle = container.querySelector('.vn-cr-tab-search-toggle');
-if (searchToggle) {
-    searchToggle.onclick = (e) => {
-        e.stopPropagation();
-        isSearchOpen = !isSearchOpen; // Flip the state
-        renderMenuContent(container); // Re-render
-    };
-}
+    if (searchToggle) {
+        searchToggle.onclick = (e) => {
+            e.stopPropagation();
+            isSearchOpen = !isSearchOpen; // Flip the state
+            renderMenuContent(container); // Re-render
+        };
+    }
 
-const searchInput = container.querySelector('#vn-cr-search-input');
-if (searchInput) {
-    searchInput.oninput = () => renderMenuContent(container);
-    searchInput.onclick = (e) => e.stopPropagation();
-}
+    const searchInput = container.querySelector('#vn-cr-search-input');
+    if (searchInput) {
+        searchInput.oninput = () => renderMenuContent(container);
+        searchInput.onclick = (e) => e.stopPropagation();
+    }
 
     // A. Tab Switching (Remains the same)
     container.querySelectorAll('.vn-cr-tab-link').forEach(btn => {
@@ -200,25 +215,37 @@ if (searchInput) {
     });
 
     // C. Delete Template (stopPropagation is CRITICAL here)
-    container.querySelectorAll('.vn-cr-item-del').forEach(btn => {
-        btn.onclick = async (e) => {
-            e.stopPropagation(); // Prevents the row's "Insert" click from firing!
-            const idx = btn.getAttribute('data-index');
-            const tmplName = data[vnCrActiveTab][idx].name;
+    container.querySelectorAll('.vn-cr-item-del').forEach(delBtn => {
+        delBtn.onclick = async (e) => {
+            e.stopPropagation(); // Prevent the template from being inserted when clicking X
 
-            if (confirm(`Delete template: "${tmplName}"?`)) {
-                data[vnCrActiveTab].splice(idx, 1);
-                await saveVNCrData(data);
-                renderMenuContent(container);
+            const idToDelete = delBtn.getAttribute('data-id');
+            const templateName = delBtn.parentElement.querySelector('.vn-cr-item-name').textContent.trim();
+
+            // Native confirmation for safety
+            if (!confirm(`Are you sure you want to delete "${templateName}"?`)) {
+                return;
             }
+
+            // A. Remove the item from the data object
+            // We look inside the currently active tab's array
+            const updatedTabItems = data[vnCrActiveTab].filter(item => item.id !== idToDelete);
+            data[vnCrActiveTab] = updatedTabItems;
+
+            // B. Save the updated object back to chrome.storage.local
+            await saveVNCrData(data);
+
+            // C. UI Reflection: Re-render the menu immediately
+            console.log(`🗑️ Deleted template: ${idToDelete}`);
+            renderMenuContent(container);
         };
     });
 
-    // D. Add New Template (Sticky Button)
-    container.querySelector('.vn-cr-add-new-tmpl').onclick = (e) => {
-        e.stopPropagation();
-        handleCreateNewTemplate(data); // We will build this function next
-    };
+    // // D. Add New Template (Sticky Button)
+    // container.querySelector('.vn-cr-add-new-tmpl').onclick = (e) => {
+    //     e.stopPropagation();
+    //     handleCreateNewTemplate(data); // We will build this function next
+    // };
 }
 
 // 5. Placeholder Resolver: Processes [[Label|Opt1|Opt2]] before insertion
