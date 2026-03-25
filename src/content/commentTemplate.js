@@ -51,16 +51,20 @@ export function initCommentFeature() {
                 menu.style.display = 'none';
             } else {
                 await renderMenuContent(menu);
-                menu.style.visibility = 'hidden';
-                menu.style.display = 'flex';
 
                 const rect = btn.getBoundingClientRect();
-                const menuHeight = menu.offsetHeight;
 
-                // Position it above the button
+                // Use 'bottom' instead of 'top' for the calculation
                 menu.style.left = `${rect.left + window.scrollX}px`;
-                menu.style.top = `${rect.top + window.scrollY - menuHeight - 8}px`;
-                menu.style.visibility = 'visible';
+
+                // We calculate the distance from the TOP of the viewport to the TOP of the button
+                // Then subtract that from the total height to pin it to the bottom.
+                // Easier way: Use bottom-up positioning
+                const bottomOffset = window.innerHeight - rect.top + 8;
+
+                menu.style.bottom = `${bottomOffset + window.scrollY}px`;
+                menu.style.top = 'auto'; // Reset top so bottom takes precedence
+                menu.style.display = 'flex';
             }
         });
 
@@ -535,40 +539,59 @@ async function showVNActionDialog(title, isInput = false, type = "primary", defa
 
 // Helper to inject text into Jira's editor
 function vnCrInsertToJira(text) {
+    console.log("vnCr: Attempting to insert text...", { textLength: text.length });
+
     const iframe = document.querySelector('#mce_0_ifr');
+    const submitBtn = document.querySelector('#issue-comment-add-submit');
+
+    // Helper to force enable the button if it exists
+    const wakeUpSubmitButton = () => {
+        if (submitBtn) {
+            console.log("vnCr: Manually enabling the 'Add' button");
+            submitBtn.removeAttribute('disabled');
+            submitBtn.setAttribute('aria-disabled', 'false');
+            // Some Jira versions use a CSS class for the grey look too
+            submitBtn.classList.remove('disabled'); 
+        }
+    };
+
     if (iframe) {
+        console.log("vnCr: Found Iframe (Rich Text Mode)");
         const doc = iframe.contentDocument || iframe.contentWindow.document;
         const editor = doc.body;
 
         iframe.contentWindow.focus();
-
-        // 1. Convert newlines to <br> for the rest of the message
         const htmlContent = text.split('\n').join('<br>');
-
-        // 2. Use insertHTML to place the live <a> tag
         doc.execCommand('insertHTML', false, htmlContent + '&nbsp;');
 
-        // 3. Trigger change events
         editor.dispatchEvent(new Event('input', { bubbles: true }));
+        editor.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        wakeUpSubmitButton();
 
-        // 4. TRIGGER JIRA HOVER RELOAD
-        // This tells Jira: "Search the page for new .user-hover links and activate them"
         try {
-            if (window.JIRA && window.JIRA.userHover && window.JIRA.userHover.init) {
-                window.JIRA.userHover.init();
-            } else if (window.AJS && window.AJS.InlineDialog) {
-                // Older Jira versions sometimes use this
-                window.AJS.trigger('contentRetrieved');
-            }
-        } catch (e) {
-            console.log("Jira hover re-init skipped", e);
-        }
+            if (window.JIRA?.userHover?.init) window.JIRA.userHover.init();
+        } catch (e) { console.warn("vnCr: Jira hover init failed", e); }
 
     } else {
+        console.log("vnCr: No Iframe found. Looking for Textarea...");
         const textarea = document.querySelector('#comment');
+        
         if (textarea) {
+            console.log("vnCr: Found Textarea (#comment)");
+            textarea.focus();
             const start = textarea.selectionStart;
-            textarea.setRangeText(text.replace(/<[^>]*>?/gm, ''), start, textarea.selectionEnd, 'end');
+            const cleanText = text.replace(/<[^>]*>?/gm, ''); 
+            
+            textarea.setRangeText(cleanText, start, textarea.selectionEnd, 'end');
+
+            // Trigger events
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            wakeUpSubmitButton();
+        } else {
+            console.error("vnCr: Could not find any comment input field (#mce_0_ifr or #comment)");
         }
     }
 }

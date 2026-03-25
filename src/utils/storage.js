@@ -1,7 +1,7 @@
 // 1. Add a version constant (ONLY change this whenever update DEFAULT_TEMPLATES)
 // 2. DO NOT CHANGE the existing DEFAULT_TEMPLATES structure (ID for example). Instead, ADD new templates to the existing arrays. 
 // 25/03/2026: Added @Tagging Jira Support 
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 13;
 
 const DEFAULT_TEMPLATES = {
     '3rd Party Tag': [
@@ -29,12 +29,12 @@ const DEFAULT_TEMPLATES = {
             name: 'After granting',
             value: "Hi [[@Reporter]],\n\n[Name]'s user ID now has [[REQUEST|NEW|EXTENDED|ADDITIONAL]] AA Access under Samsung SEC org, Korea r/s until Sep 2027.\nLink to your desired Samsung organization: **********************\nIf inaccessible, please try clear cache and log-in incognito mode.\n\nNOTE: Kindly inform us if the user encounters any access issues.\n\nBest,"
         },
-          {
+        {
             id: 'vn-cr-acc-al-1',
             category: 'AL',
             name: 'Awaiting D2C approval',
             value: 'Dear [[@D2C]],\n\nWe have well received the information table and signed NDAs.\n\nPlease approve to grant AL access under Samsung org with Malaysia props.\n\nBest,'
-            
+
         },
         {
             id: 'vn-cr-acc-al-2',
@@ -71,7 +71,7 @@ const DEFAULT_TEMPLATES = {
             id: 'vn-cr-gen-rem-2',
             name: 'Reminder 2',
             value: 'Hi [[@Reporter]],\n\nJust a quick follow-up on our previous message.\nCould you please share an update or let us know if there’s any progress?\n\nThanks & Regards,'
-        }
+        },
     ]
 };
 
@@ -83,7 +83,7 @@ export async function getVNCrData() {
     // If version is old, we MERGE instead of OVERWRITE
     if (!result.vnCrVersion || result.vnCrVersion < SCHEMA_VERSION) {
         console.log(`Updating schema from ${result.vnCrVersion || 0} to ${SCHEMA_VERSION}...`);
-        
+
         // 1. Loop through each tab (3rd Party, Account, etc.)
         for (const tabName in DEFAULT_TEMPLATES) {
             if (!currentData[tabName]) {

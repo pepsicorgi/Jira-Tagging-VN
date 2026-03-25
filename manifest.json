@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Jira Tagging VN",
-  "version": "1.6",
+  "name": "Jira Tagging",
+  "version": "1.7",
   "permissions": ["storage"],
-  "description": "Testing Tagging Jira VN Extension",
+  "description": "Enhance your Jira experience with checklist and template features.",
   "icons": {
     "16": "images/icon-16.png",
     "32": "images/icon-32.png",
