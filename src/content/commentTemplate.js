@@ -96,13 +96,24 @@ async function renderMenuContent(container) {
 
     if (!categories.includes(vnCrActiveTab)) vnCrActiveTab = categories[0];
 
-    // Filter items
+    // A. Filter items
     const filteredItems = data[vnCrActiveTab].filter(item => {
         const nameMatch = item.name.toLowerCase().includes(searchTerm);
         const categoryMatch = item.category?.toLowerCase().includes(searchTerm);
         return nameMatch || categoryMatch;
     });
 
+
+    // B. NEW SORTING LOGIC: Pinned first, then by original array order
+    // We use a copy of the filtered items to avoid mutating the original data
+    const sortedItems = [...filteredItems].sort((a, b) => {
+        // If 'a' is pinned and 'b' isn't, move 'a' up
+        if (a.isPinned && !b.isPinned) return -1;
+        // If 'b' is pinned and 'a' isn't, move 'b' up
+        if (!a.isPinned && b.isPinned) return 1;
+        // If both are pinned or both are unpinned, keep original chronological order
+        return 0;
+    });
     container.innerHTML = `
         <div class="vn-cr-tabs-header">
             <div class="vn-cr-tabs-list">
@@ -122,18 +133,33 @@ async function renderMenuContent(container) {
             <input type="text" id="vn-cr-search-input" placeholder="Search templates..." value="${searchTerm.replace(/"/g, '&quot;')}">
         </div>
 
-        <div class="vn-cr-items-list">
-            ${filteredItems.map((tmpl) => `
-                <div class="vn-cr-item-row" data-id="${tmpl.id}">
+       <div class="vn-cr-items-list">
+            ${sortedItems.map((tmpl) => `
+                <div class="vn-cr-item-row ${tmpl.isPinned ? 'is-pinned' : ''}" data-id="${tmpl.id}">
                     <div class="vn-cr-item-name">
                         ${tmpl.category ? `<span class="vn-cr-badge">${tmpl.category}</span> ` : ''}
                         ${tmpl.name}
                     </div>
-                    <button class="vn-cr-item-del" data-id="${tmpl.id}">×</button>
+                    <div class="vn-cr-item-actions" style="display:flex; align-items:center; gap:5px;">
+                        <button class="vn-cr-item-pin" data-id="${tmpl.id}" title="${tmpl.isPinned ? 'Unpin' : 'Pin to top'}" 
+                            style="background:none; border:none; cursor:pointer; font-size:14px; opacity: ${tmpl.isPinned ? '1' : '0.4'}">
+                            ${tmpl.isPinned ? '📌' : '📍'}
+                        </button>
+                        <button class="vn-cr-item-del" data-id="${tmpl.id}">×</button>
+                    </div>
                 </div>
             `).join('')}
         </div>
-
+        <div id="vn-cr-dialog-overlay" class="vn-cr-dialog-hidden">
+    <div class="vn-cr-dialog-box">
+        <p id="vn-cr-dialog-title"></p>
+        <input type="text" id="vn-cr-dialog-input" style="display:none;" placeholder="Type here...">
+        <div class="vn-cr-dialog-footer">
+            <button id="vn-cr-dialog-cancel">Cancel</button>
+            <button id="vn-cr-dialog-confirm">Confirm</button>
+        </div>
+    </div>
+</div>                            
     `;
 
     setupMenuEvents(container, data);
@@ -148,7 +174,7 @@ async function renderMenuContent(container) {
 
 // 3. New function to handle interactions inside the dropdown
 function setupMenuEvents(container, data) {
-    // --- SCROLL FIX HERE ---
+    // SCROLL FIX 
     const itemsList = container.querySelector('.vn-cr-items-list');
     if (itemsList) {
         itemsList.onwheel = (e) => {
@@ -164,8 +190,8 @@ function setupMenuEvents(container, data) {
             }
         };
     }
-    // --- END SCROLL FIX ---
 
+    // SEARCH TOGGLE
     const searchToggle = container.querySelector('.vn-cr-tab-search-toggle');
     if (searchToggle) {
         searchToggle.onclick = (e) => {
@@ -181,6 +207,29 @@ function setupMenuEvents(container, data) {
         searchInput.onclick = (e) => e.stopPropagation();
     }
 
+    // PIN CLICK HANDLER 
+    container.querySelectorAll('.vn-cr-item-pin').forEach(pinBtn => {
+        pinBtn.onclick = async (e) => {
+            e.stopPropagation(); // Stop the row from being clicked/inserted
+            const idToToggle = pinBtn.getAttribute('data-id');
+
+            // Find the item in the current tab array
+            const item = data[vnCrActiveTab].find(i => i.id === idToToggle);
+            if (item) {
+                // Toggle the state
+                item.isPinned = !item.isPinned;
+
+                // Save to storage
+                await saveVNCrData(data);
+
+                // Re-render to see the item jump to top/bottom
+                renderMenuContent(container);
+            }
+        };
+    });
+
+
+    // TAB HANDLERS
     // A. Tab Switching (Remains the same)
     container.querySelectorAll('.vn-cr-tab-link').forEach(btn => {
         btn.onclick = (e) => {
@@ -190,7 +239,82 @@ function setupMenuEvents(container, data) {
         };
     });
 
-    // B. Insert Template (Now triggers on the whole ROW)
+    // B. ADD NEW TAB 
+    const addTabBtn = container.querySelector('.vn-cr-tab-add');
+    if (addTabBtn) {
+        addTabBtn.onclick = async (e) => {
+            e.stopPropagation();
+
+            // 1. Use our beautiful Mini-Dialog with an input field
+            const newTabName = await showVNActionDialog("New Category Name:", true, "primary");
+
+            // Validation: If user clicked Cancel or entered nothing but spaces
+            if (!newTabName || newTabName.trim() === "") return;
+
+            const trimmedName = newTabName.trim();
+
+            // 2. Check for duplicates using our Dialog instead of alert()
+            if (data[trimmedName]) {
+                await showVNActionDialog(`"${trimmedName}" already exists!`, false, "primary");
+                return;
+            }
+
+            // 3. Add the new empty category to our data object
+            data[trimmedName] = [];
+
+            // 4. Set the new tab as the active one so they see the empty state
+            vnCrActiveTab = trimmedName;
+
+            // 5. Save to Chrome Storage & Refresh
+            await saveVNCrData(data);
+
+            console.log(`✨ Created new category: ${trimmedName}`);
+            renderMenuContent(container);
+        };
+    }
+
+    // C. DELETE TAB
+    container.querySelectorAll('.vn-cr-tab-link').forEach(tab => {
+        tab.oncontextmenu = async (e) => {
+            e.preventDefault(); // Stop the native browser menu
+
+            const tabToDelete = tab.getAttribute('data-name');
+
+            // 1. Show the custom Red Danger dialog
+            const confirmed = await showVNActionDialog(
+                `Delete entire "${tabToDelete}" tab and ALL its templates?`,
+                false,
+                "danger"
+            );
+
+            // 2. If they cancelled, do nothing
+            if (!confirmed) return;
+
+            // 3. Perform the deletion
+            delete data[tabToDelete];
+
+            // 4. Safety check: What if we just deleted the last tab?
+            const remainingTabs = Object.keys(data);
+            if (remainingTabs.length > 0) {
+                // If the tab we deleted was the active one, switch to the first available
+                if (vnCrActiveTab === tabToDelete) {
+                    vnCrActiveTab = remainingTabs[0];
+                }
+            } else {
+                // If NO tabs left, create an empty 'General' one so the app doesn't crash
+                data["General"] = [];
+                vnCrActiveTab = "General";
+            }
+
+            // 5. Save and Refresh
+            await saveVNCrData(data);
+            console.log(`🔥 Category purged: ${tabToDelete}`);
+            renderMenuContent(container);
+        };
+    });
+
+    // TEMPLATE HANDLERS
+    // A. Insert Template 
     container.querySelectorAll('.vn-cr-item-row').forEach(row => {
         row.onclick = async (e) => { // 1. Must be async
             e.stopPropagation();
@@ -214,18 +338,19 @@ function setupMenuEvents(container, data) {
         };
     });
 
-    // C. Delete Template (stopPropagation is CRITICAL here)
+    // B. Delete Template
     container.querySelectorAll('.vn-cr-item-del').forEach(delBtn => {
         delBtn.onclick = async (e) => {
             e.stopPropagation(); // Prevent the template from being inserted when clicking X
 
             const idToDelete = delBtn.getAttribute('data-id');
-            const templateName = delBtn.parentElement.querySelector('.vn-cr-item-name').textContent.trim();
+            // Find the closest row first, then search for the name inside it
+            const row = delBtn.closest('.vn-cr-item-row');
+            const templateName = row.querySelector('.vn-cr-item-name').textContent.trim();
 
             // Native confirmation for safety
-            if (!confirm(`Are you sure you want to delete "${templateName}"?`)) {
-                return;
-            }
+            const confirmed = await showVNActionDialog(`Delete "${templateName}"?`, false, "danger");
+            if (!confirmed) return;
 
             // A. Remove the item from the data object
             // We look inside the currently active tab's array
@@ -240,12 +365,6 @@ function setupMenuEvents(container, data) {
             renderMenuContent(container);
         };
     });
-
-    // // D. Add New Template (Sticky Button)
-    // container.querySelector('.vn-cr-add-new-tmpl').onclick = (e) => {
-    //     e.stopPropagation();
-    //     handleCreateNewTemplate(data); // We will build this function next
-    // };
 }
 
 // 5. Placeholder Resolver: Processes [[Label|Opt1|Opt2]] before insertion
@@ -263,13 +382,22 @@ async function handleTemplateInsertion(templateValue) {
             templateValue = templateValue.replace('[[@Reporter]]', `${reporter.displayName}`);
         }
     }
-    // 2. Handle Fixed D2C Tagging Account
+    // 2.1 Handle Fixed D2C Tagging Account
     if (templateValue.includes('[[@D2C]]')) {
         const d2cId = "tagging.d2c@samsung.com";
         const d2cName = "D2C Tagging";
         const d2cHtml = `<a class="user-hover" title="Follow link" contenteditable="false" tabindex="-1" href="/secure/ViewProfile.jspa?name=${encodeURIComponent(d2cId)}" rel="${d2cId}">${d2cName}</a>`;
 
         templateValue = templateValue.replace('[[@D2C]]', d2cHtml);
+    }
+
+    // 2.2 Handle Fixed Tagging Jira Support
+    if (templateValue.includes('[[TAGGING JIRA SUPPORT]]')) {
+        const taggingId = "tagging.jira@concentrix.com";
+        const taggingName = "TAGGING JIRA SUPPORT";
+        const taggingHtml = `<a class="user-hover" title="Follow link" contenteditable="false" tabindex="-1" href="/secure/ViewProfile.jspa?name=${encodeURIComponent(taggingId)}" rel="${taggingId}">${taggingName}</a>`;
+
+        templateValue = templateValue.replace('[[TAGGING JIRA SUPPORT]]', taggingHtml);
     }
 
     // 3. Continue with Choice Placeholders [[Label|Opt1|...]]
@@ -329,7 +457,6 @@ function showPlaceholderPicker(label, options) {
     });
 }
 
-
 function getJiraReporterName() {
     const reporterElement = document.querySelector('#reporter-val .user-hover');
     if (reporterElement) {
@@ -340,6 +467,72 @@ function getJiraReporterName() {
     }
     return { userId: null, displayName: 'reporter' };
 }
+
+async function showVNActionDialog(title, isInput = false, type = "primary", defaultValue = "") {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('vn-cr-dialog-overlay');
+        const titleEl = document.getElementById('vn-cr-dialog-title');
+        const inputEl = document.getElementById('vn-cr-dialog-input');
+        const confirmBtn = document.getElementById('vn-cr-dialog-confirm');
+        const cancelBtn = document.getElementById('vn-cr-dialog-cancel');
+
+        // 1. Set Content
+        titleEl.textContent = title;
+        inputEl.style.display = isInput ? 'block' : 'none';
+        inputEl.value = defaultValue;
+
+        // 2. Set Button Style based on Type
+        if (type === "danger") {
+            confirmBtn.textContent = "Delete";
+            confirmBtn.style.backgroundColor = "#ff5630"; // A slightly more vibrant "Modern" Red
+        } else {
+            confirmBtn.textContent = "Confirm";
+            confirmBtn.style.backgroundColor = "#0065ff"; // Bright Jira Blue
+        }
+
+        overlay.classList.remove('vn-cr-dialog-hidden');
+        if (isInput) setTimeout(() => inputEl.focus(), 10);
+
+        // 3. Helper to close and return value
+        const close = (val) => {
+            overlay.classList.add('vn-cr-dialog-hidden');
+            // Clean up listeners so they don't stack up next time
+            window.removeEventListener('keydown', handleKeyDown);
+            resolve(val);
+        };
+
+        // 4. Keyboard Support (Enter and Escape)
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+                const val = isInput ? inputEl.value : true;
+                if (isInput && !val.trim()) return; // Don't allow empty tab names
+                close(val);
+            }
+            if (e.key === 'Escape') {
+                close(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+
+        // 5. Click Events
+        confirmBtn.onclick = (e) => {
+            e.stopPropagation();
+            const val = isInput ? inputEl.value : true;
+            close(val);
+        };
+
+        cancelBtn.onclick = (e) => {
+            e.stopPropagation();
+            close(null);
+        };
+
+        // Close if clicking outside the white box
+        overlay.onclick = (e) => {
+            if (e.target === overlay) close(null);
+        };
+    });
+}
+
 // Helper to inject text into Jira's editor
 function vnCrInsertToJira(text) {
     const iframe = document.querySelector('#mce_0_ifr');

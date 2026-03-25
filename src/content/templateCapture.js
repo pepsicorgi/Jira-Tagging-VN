@@ -86,7 +86,7 @@ async function showSaveModal(content) {
         <div class="vn-cr-modal-form">
             <div class="vn-form-group">
                 <label>Template Name</label>
-                <input type="text" id="modal-name" placeholder="e.g., Request D2C Access">
+                <input type="text" id="modal-name" placeholder="e.g., Developer Access Request">
             </div>
             
             <div class="vn-form-group">
@@ -97,8 +97,8 @@ async function showSaveModal(content) {
             </div>
 
             <div id="modal-cat-section" class="vn-form-group">
-                <label>Category (Optional)</label>
-                <input type="text" id="modal-category" placeholder="e.g., Email, Checklist, GA...">
+                <label>Label (Optional)</label>
+                <input type="text" id="modal-category" placeholder="e.g., GA, AA, On hold...">
             </div>
         </div>
 

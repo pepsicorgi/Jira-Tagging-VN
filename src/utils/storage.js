@@ -1,5 +1,7 @@
-// 1. Add a version constant (change this whenever update DEFAULT_TEMPLATES)
-const SCHEMA_VERSION = 9;
+// 1. Add a version constant (ONLY change this whenever update DEFAULT_TEMPLATES)
+// 2. DO NOT CHANGE the existing DEFAULT_TEMPLATES structure (ID for example). Instead, ADD new templates to the existing arrays. 
+// 25/03/2026: Added @Tagging Jira Support 
+const SCHEMA_VERSION = 11;
 
 const DEFAULT_TEMPLATES = {
     '3rd Party Tag': [
@@ -11,7 +13,7 @@ const DEFAULT_TEMPLATES = {
         {
             id: 'vn-cr-3rd-2',
             name: 'After publishing',
-            value: 'Hi [[@Reporter]],\n\nI\'d like to inform you that the library has been published successfully.\nPlease recheck on your end and change the status of the ticket to "Closed" if there are no issues.\n\nShould you have any additional questions or require further assistance in the future, please feel free to create a new ticket. We are always here to help.\n\nNOTE: Please assign this ticket back to @Tagging Jira Support to ensure your update is visible to the entire team, so that we can proceed with the next step.\n\nThank you for your understanding and cooperation.'
+            value: 'Hi [[@Reporter]],\n\nI\'d like to inform you that the library has been published successfully.\nPlease recheck on your end and change the status of the ticket to "Closed" if there are no issues.\n\nShould you have any additional questions or require further assistance in the future, please feel free to create a new ticket. We are always here to help.\n\nNOTE: Please assign this ticket back to [[TAGGING JIRA SUPPORT]] to ensure your update is visible to the entire team, so that we can proceed with the next step.\n\nThank you for your understanding and cooperation.'
         }
     ],
     'Account': [
@@ -73,20 +75,36 @@ const DEFAULT_TEMPLATES = {
     ]
 };
 
-
-
+// UPDATE to MERGE default templates with existing user data if schema version is outdated. 
 export async function getVNCrData() {
     const result = await chrome.storage.local.get(['vnCrTemplates', 'vnCrVersion']);
+    let currentData = result.vnCrTemplates || DEFAULT_TEMPLATES;
 
-    // 2. If version is missing or old, overwrite with new defaults
+    // If version is old, we MERGE instead of OVERWRITE
     if (!result.vnCrVersion || result.vnCrVersion < SCHEMA_VERSION) {
-        console.log("Updating to new template version...");
-        await saveVNCrData(DEFAULT_TEMPLATES);
+        console.log(`Updating schema from ${result.vnCrVersion || 0} to ${SCHEMA_VERSION}...`);
+        
+        // 1. Loop through each tab (3rd Party, Account, etc.)
+        for (const tabName in DEFAULT_TEMPLATES) {
+            if (!currentData[tabName]) {
+                currentData[tabName] = [];
+            }
+
+            // 2. Only add default templates that don't already exist in the user's storage
+            DEFAULT_TEMPLATES[tabName].forEach(defaultTmpl => {
+                const alreadyExists = currentData[tabName].some(item => item.id === defaultTmpl.id);
+                if (!alreadyExists) {
+                    currentData[tabName].push(defaultTmpl);
+                }
+            });
+        }
+
+        // 3. Save the merged data and update the version number
+        await saveVNCrData(currentData);
         await chrome.storage.local.set({ vnCrVersion: SCHEMA_VERSION });
-        return DEFAULT_TEMPLATES;
     }
 
-    return result.vnCrTemplates;
+    return currentData;
 }
 
 export async function saveVNCrData(data) {
