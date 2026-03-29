@@ -703,3 +703,69 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     border: 1px solid rgba(255,255,255,0.1);
 }
+
+.vn-copy-btn {
+    display: inline-block;
+    cursor: pointer;
+    margin-left: 6px;
+    padding: 0 4px;
+    font-size: 12px;
+    border: 1px solid #dfe1e6;
+    background: #f4f5f7;
+    border-radius: 3px;
+    line-height: 1.4;
+    transition: background 0.2s;
+}
+
+.vn-copy-btn:hover {
+    background: #ebecf0;
+}
+
+
+/* The Highlighted Text */
+/* Styling for the text itself */
+.vn-sub-highlight {
+    background-color: rgba(76, 154, 255, 0.15); /* Light Jira Blue */
+    color: #0052cc; /* Jira Link Blue */
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.vn-highlight.vn-lib-text {
+    color: #00875a;
+    background-color: #e3fcef;
+}
+
+.vn-highlight:hover {
+    background-color: #deebff;
+    border-bottom-style: solid;
+}
+
+/* Feedback when text is clicked */
+.vn-text-copied {
+    background-color: #253858 !important;
+    color: white !important;
+}
+
+.vn-subsidiary-tooltip {
+    position: fixed !important; /* Changed from absolute to fixed */
+    display: none;
+    background: #172b4d !important;
+    color: #ffffff !important;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    pointer-events: none;
+    border: 1px solid #45526d;
+    min-width: 200px;
+    z-index: 999999 !important; /* Ensure it is above Jira modals */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Optional: Subtle pulse to the field to show it has "Power-Ups" */
+#customfield_19102-val {
+    background-color: transparent !important;
+}
