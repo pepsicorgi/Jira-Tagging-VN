@@ -724,6 +724,14 @@
 
 /* The Highlighted Text */
 /* Styling for the text itself */
+.vn-highlight {
+    background-color: rgba(76, 154, 255, 0.15); /* Light Blue */
+    color: #0052cc; /* Jira Link Blue */
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
 .vn-sub-highlight {
     background-color: rgba(76, 154, 255, 0.15); /* Light Jira Blue */
     color: #0052cc; /* Jira Link Blue */
